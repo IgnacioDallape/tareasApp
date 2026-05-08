@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fbe8c0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mis Tareas">
+<title>Mis Tareas</title>
+<link id="manifest-link" rel="manifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --c1: #fbe8c0;
+  --c2: #e8d6ae;
+  --c3: #d5c39c;
+  --c4: #c2b18a;
+  --c5: #af9e78;
+  --c5d: #9d8e6a;
+  --td: #3a2e1e;
+  --tm: #6b5a3e;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 17px;
+  background: var(--c1);
+  color: var(--td);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* ── Header ── */
+header { margin-bottom: 36px; }
+
+.hdr-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  color: var(--td);
+}
+
+.sub {
+  font-size: 16px;
+  color: var(--tm);
+  margin-top: 5px;
+  font-weight: 400;
+}
+
+.badge {
+  background: var(--c5);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background .2s;
+}
+
+.badge.zero { background: var(--c4); }
+
+/* ── Add form ── */
+.add-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.add-input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  padding: 0 18px;
+  font-family: inherit;
+  font-size: 17px;
+  color: var(--td);
+  background: #fff;
+  border: 2px solid var(--c3);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.add-input::placeholder { color: var(--c4); }
+
+.add-input:focus {
+  border-color: var(--c5);
+  box-shadow: 0 0 0 3px rgba(175,158,120,.2);
+}
+
+.add-btn {
+  height: 52px;
+  padding: 0 22px;
+  background: var(--c5);
+  color: #fff;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .2s, transform .15s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.add-btn:hover { background: var(--c5d); }
+.add-btn:active { transform: scale(.96); }
+
+/* ── Actions bar ── */
+.act-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sec-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--tm);
+}
+
+.clear-btn {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--tm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: color .2s, background .2s;
+}
+
+.clear-btn:hover { color: var(--td); background: var(--c2); }
+.clear-btn:disabled { opacity: .35; cursor: default; pointer-events: none; }
+
+/* ── Task list ── */
+.task-list { display: flex; flex-direction: column; }
+
+/* ── Task item ── */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--c2);
+  border: 1.5px solid var(--c3);
+  border-radius: 12px;
+  padding: 16px 14px 16px 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  cursor: pointer;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: background .2s, border-color .2s, opacity .2s, box-shadow .2s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.task-item:hover {
+  background: var(--c3);
+  border-color: var(--c4);
+  box-shadow: 0 4px 14px rgba(0,0,0,.11);
+}
+
+.task-item.done { opacity: .55; }
+.task-item.done:hover { opacity: .72; }
+
+/* Add animation */
+.task-item.is-new { animation: slideIn .26s ease forwards; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Delete animation */
+.task-item.is-out {
+  animation: slideOut .32s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes slideOut {
+  0%   { opacity: 1; max-height: 200px; margin-bottom: 10px; padding-top: 16px; padding-bottom: 16px; transform: translateX(0); }
+  38%  { opacity: 0; transform: translateX(22px); }
+  100% { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; transform: translateX(22px); }
+}
+
+/* ── Check circle ── */
+.chk {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--c4);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s, border-color .2s;
+}
+
+.task-item.done .chk {
+  background: var(--c5);
+  border-color: var(--c5);
+}
+
+.chk-icon {
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+.task-item.done .chk-icon { opacity: 1; }
+
+/* ── Task text ── */
+.txt-wrap { flex: 1; min-width: 0; }
+
+.txt {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--td);
+  line-height: 1.45;
+  word-break: break-word;
+  transition: color .2s, text-decoration-color .38s;
+  text-decoration-line: line-through;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+}
+
+.task-item.done .txt {
+  color: var(--tm);
+  text-decoration-color: var(--tm);
+}
+
+/* ── Delete button ── */
+.del {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--c4);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .2s, background .2s;
+  line-height: 1;
+}
+
+.del:hover { color: #c0392b; background: rgba(192,57,43,.1); }
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.div-line { flex: 1; height: 1px; background: var(--c3); }
+
+.div-lbl {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--c4);
+  white-space: nowrap;
+}
+
+/* ── Empty state ── */
+.empty {
+  text-align: center;
+  padding: 52px 20px 20px;
+  animation: fadeUp .3s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.empty-ico { font-size: 62px; display: block; margin-bottom: 18px; }
+.empty-h   { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--td); }
+.empty-p   { font-size: 17px; color: var(--tm); line-height: 1.5; }
+
+/* ── Install banner ── */
+.inst-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(160px);
+  background: var(--td);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.22);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 420px;
+  width: calc(100% - 40px);
+  z-index: 100;
+  transition: transform .42s cubic-bezier(.34,1.56,.64,1);
+}
+
+.inst-banner.show { transform: translateX(-50%) translateY(0); }
+
+.ib-txt { flex: 1; font-size: 15px; line-height: 1.4; }
+.ib-txt strong { display: block; font-size: 16px; margin-bottom: 2px; }
+
+.ib-ok {
+  background: var(--c5);
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+
+.ib-ok:hover { background: var(--c5d); }
+
+.ib-x {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.5);
+  font-size: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0;
+  transition: color .2s;
+}
+
+.ib-x:hover { color: rgba(255,255,255,.85); }
+
+/* ── Responsive ── */
+@media (max-width: 380px) {
+  .add-btn .btn-lbl { display: none; }
+  .add-btn { padding: 0 16px; }
+  h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="hdr-row">
+      <div>
+        <h1>Mis Tareas</h1>
+        <p class="sub">Organizá tu día con claridad</p>
+      </div>
+      <span class="badge zero" id="badge">0 pendientes</span>
+    </div>
+  </header>
+
+  <form class="add-form" id="add-form" autocomplete="off">
+    <input
+      id="task-input"
+      class="add-input"
+      type="text"
+      placeholder="¿Qué querés hacer hoy?"
+      maxlength="200"
+      autocomplete="off"
+    >
+    <button type="submit" class="add-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+        <path d="M9 2v14M2 9h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <span class="btn-lbl">Agregar</span>
+    </button>
+  </form>
+
+  <div class="act-bar">
+    <span class="sec-label" id="sec-label">Sin tareas</span>
+    <button class="clear-btn" id="clear-btn" disabled>Limpiar completadas</button>
+  </div>
+
+  <div class="task-list" id="task-list"></div>
+</div>
+
+<div class="inst-banner" id="inst-banner">
+  <div class="ib-txt">
+    <strong>Instalar app</strong>
+    Agregá Mis Tareas a tu pantalla de inicio
+  </div>
+  <button class="ib-ok" id="ib-ok">Instalar</button>
+  <button class="ib-x" id="ib-x" aria-label="Cerrar">×</button>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const KEY = 'mis-tareas-v1';
+let tasks = [];
+let deferredPrompt = null;
+let newId = null;
+
+function loadData() {
+  try { tasks = JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { tasks = []; }
+}
+
+function saveData() {
+  localStorage.setItem(KEY, JSON.stringify(tasks));
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function animateOut(el, cb) {
+  el.classList.add('is-out');
+  let called = false;
+  const finish = () => { if (called) return; called = true; cb(); };
+  el.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, 450); // fallback si animationend no dispara
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const pending = tasks.filter(t => !t.done);
+  const done    = tasks.filter(t =>  t.done);
+
+  // Badge
+  const p = pending.length;
+  const badge = document.getElementById('badge');
+  badge.textContent = p === 1 ? '1 pendiente' : `${p} pendientes`;
+  badge.classList.toggle('zero', p === 0);
+
+  // Clear button
+  document.getElementById('clear-btn').disabled = done.length === 0;
+
+  // Section label
+  const total = tasks.length;
+  document.getElementById('sec-label').textContent =
+    total === 0     ? 'Sin tareas' :
+    total === 1     ? '1 tarea'    : `${total} tareas`;
+
+  // List
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+
+  if (tasks.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <span class="empty-ico">✅</span>
+        <p class="empty-h">¡Todo en orden!</p>
+        <p class="empty-p">Escribí una tarea arriba<br>para empezar tu día</p>
+      </div>`;
+    return;
+  }
+
+  pending.forEach(t => list.appendChild(makeItem(t)));
+
+  if (pending.length > 0 && done.length > 0) {
+    const div = document.createElement('div');
+    div.className = 'divider';
+    div.innerHTML = `
+      <div class="div-line"></div>
+      <span class="div-lbl">Completadas</span>
+      <div class="div-line"></div>`;
+    list.appendChild(div);
+  }
+
+  done.forEach(t => list.appendChild(makeItem(t)));
+}
+
+function makeItem(task) {
+  const el = document.createElement('div');
+  el.className = [
+    'task-item',
+    task.done      ? 'done'   : '',
+    task.id === newId ? 'is-new' : ''
+  ].filter(Boolean).join(' ');
+  el.dataset.id = task.id;
+
+  el.innerHTML = `
+    <div class="chk" aria-hidden="true">
+      <svg class="chk-icon" width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <polyline points="2,6.5 5,10 11,3"
+          stroke="#fff" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="txt-wrap">
+      <span class="txt">${esc(task.text)}</span>
+    </div>
+    <button class="del" title="Eliminar tarea" aria-label="Eliminar">✕</button>`;
+
+  el.addEventListener('click', e => {
+    if (e.target.closest('.del')) return;
+    const t = tasks.find(t => t.id === task.id);
+    if (t) { t.done = !t.done; saveData(); render(); }
+  });
+
+  el.querySelector('.del').addEventListener('click', e => {
+    e.stopPropagation();
+    animateOut(el, () => {
+      tasks = tasks.filter(t => t.id !== task.id);
+      saveData();
+      render();
+    });
+  });
+
+  return el;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function addTask(text) {
+  text = text.trim();
+  if (!text) return false;
+  const id = Date.now();
+  newId = id;
+  tasks.unshift({ id, text, done: false, created: id });
+  saveData();
+  render();
+  newId = null;
+  return true;
+}
+
+function clearCompleted() {
+  const list = document.getElementById('task-list');
+  const doneEls = Array.from(list.querySelectorAll('.task-item.done'));
+
+  if (!doneEls.length) {
+    tasks = tasks.filter(t => !t.done);
+    saveData(); render(); return;
+  }
+
+  let remaining = doneEls.length;
+  doneEls.forEach(el => {
+    animateOut(el, () => {
+      if (--remaining === 0) {
+        tasks = tasks.filter(t => !t.done);
+        saveData(); render();
+      }
+    });
+  });
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+document.getElementById('add-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = document.getElementById('task-input');
+  if (addTask(inp.value)) { inp.value = ''; inp.focus(); }
+});
+
+document.getElementById('clear-btn').addEventListener('click', clearCompleted);
+
+// ── PWA: Manifest ─────────────────────────────────────────────────────────────
+(function () {
+  const svg = [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">',
+    '<rect width="512" height="512" rx="96" fill="#af9e78"/>',
+    '<polyline points="128,256 224,352 384,160" fill="none" stroke="white"',
+    ' stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>',
+    '</svg>'
+  ].join('');
+  const iconUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+
+  const mf = {
+    name: 'Mis Tareas',
+    short_name: 'Tareas',
+    description: 'Organizá tus tareas personales',
+    display: 'standalone',
+    orientation: 'portrait-primary',
+    start_url: '.',
+    scope: './',
+    theme_color: '#fbe8c0',
+    background_color: '#fbe8c0',
+    icons: [
+      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+    ]
+  };
+
+  const blob = new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' });
+  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+})();
+
+// ── PWA: Service Worker ───────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  const swCode = `
+const CACHE = 'mis-tareas-sw-v1';
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.open(CACHE).then(cache =>
+      cache.match(e.request).then(cached => {
+        const net = fetch(e.request).then(res => {
+          if (res && res.ok && res.type === 'basic')
+            cache.put(e.request, res.clone());
+          return res;
+        }).catch(() => cached);
+        return cached || net;
+      })
+    )
+  );
+});`;
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+}
+
+// ── PWA: Install prompt ───────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => document.getElementById('inst-banner').classList.add('show'), 2500);
+});
+
+document.getElementById('ib-ok').addEventListener('click', () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('inst-banner').classList.remove('show');
+  });
+});
+
+document.getElementById('ib-x').addEventListener('click', () => {
+  document.getElementById('inst-banner').classList.remove('show');
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadData();
+render();
+</script>
+</body>
+</html>
