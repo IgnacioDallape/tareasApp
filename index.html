@@ -8,7 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Mis Tareas">
 <title>Mis Tareas</title>
-<link id="manifest-link" rel="manifest">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
@@ -593,60 +594,9 @@ document.getElementById('add-form').addEventListener('submit', e => {
 
 document.getElementById('clear-btn').addEventListener('click', clearCompleted);
 
-// ── PWA: Manifest ─────────────────────────────────────────────────────────────
-(function () {
-  const svg = [
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">',
-    '<rect width="512" height="512" rx="96" fill="#af9e78"/>',
-    '<polyline points="128,256 224,352 384,160" fill="none" stroke="white"',
-    ' stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>',
-    '</svg>'
-  ].join('');
-  const iconUrl = 'data:image/svg+xml;base64,' + btoa(svg);
-
-  const mf = {
-    name: 'Mis Tareas',
-    short_name: 'Tareas',
-    description: 'Organizá tus tareas personales',
-    display: 'standalone',
-    orientation: 'portrait-primary',
-    start_url: '.',
-    scope: './',
-    theme_color: '#fbe8c0',
-    background_color: '#fbe8c0',
-    icons: [
-      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
-      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
-    ]
-  };
-
-  const blob = new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' });
-  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
-})();
-
 // ── PWA: Service Worker ───────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  const swCode = `
-const CACHE = 'mis-tareas-sw-v1';
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.open(CACHE).then(cache =>
-      cache.match(e.request).then(cached => {
-        const net = fetch(e.request).then(res => {
-          if (res && res.ok && res.type === 'basic')
-            cache.put(e.request, res.clone());
-          return res;
-        }).catch(() => cached);
-        return cached || net;
-      })
-    )
-  );
-});`;
-  const swBlob = new Blob([swCode], { type: 'application/javascript' });
-  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 
 // ── PWA: Install prompt ───────────────────────────────────────────────────────
