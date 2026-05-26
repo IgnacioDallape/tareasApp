@@ -23,10 +23,15 @@
   --c5d: #9d8e6a;
   --td: #3a2e1e;
   --tm: #6b5a3e;
+  --urg:  #d94040;
+  --urgb: #fdf0f0;
+  --urgd: #b83232;
+  --pri:  #c87a0a;
+  --prib: #fef6e7;
+  --prid: #a86508;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { height: 100%; -webkit-tap-highlight-color: transparent; }
 
 body {
@@ -45,7 +50,7 @@ body {
 }
 
 /* ── Header ── */
-header { margin-bottom: 36px; }
+header { margin-bottom: 32px; }
 
 .hdr-row {
   display: flex;
@@ -81,14 +86,13 @@ h1 {
   margin-top: 2px;
   transition: background .2s;
 }
-
 .badge.zero { background: var(--c4); }
 
 /* ── Add form ── */
 .add-form {
   display: flex;
   gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 12px;
 }
 
 .add-input {
@@ -105,9 +109,7 @@ h1 {
   outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
-
 .add-input::placeholder { color: var(--c4); }
-
 .add-input:focus {
   border-color: var(--c5);
   box-shadow: 0 0 0 3px rgba(175,158,120,.2);
@@ -133,9 +135,74 @@ h1 {
   -webkit-user-select: none;
   user-select: none;
 }
-
 .add-btn:hover { background: var(--c5d); }
 .add-btn:active { transform: scale(.96); }
+
+/* ── Priority selector ── */
+.prio-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.prio-pill {
+  flex: 1;
+  height: 40px;
+  border: 2px solid var(--c3);
+  border-radius: 10px;
+  background: white;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: border-color .18s, background .18s, color .18s, transform .12s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.prio-pill:hover { border-color: var(--c4); background: var(--c2); }
+.prio-pill:active { transform: scale(.96); }
+
+.prio-pill .pdot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background .18s;
+}
+
+/* Urgente pill */
+.prio-pill[data-p="urgente"] .pdot { background: var(--c3); }
+.prio-pill[data-p="urgente"]:hover .pdot { background: var(--urg); }
+.prio-pill[data-p="urgente"].active {
+  background: var(--urgb);
+  border-color: var(--urg);
+  color: var(--urgd);
+}
+.prio-pill[data-p="urgente"].active .pdot { background: var(--urg); }
+
+/* Prioritaria pill */
+.prio-pill[data-p="prioritaria"] .pdot { background: var(--c3); }
+.prio-pill[data-p="prioritaria"]:hover .pdot { background: var(--pri); }
+.prio-pill[data-p="prioritaria"].active {
+  background: var(--prib);
+  border-color: var(--pri);
+  color: var(--prid);
+}
+.prio-pill[data-p="prioritaria"].active .pdot { background: var(--pri); }
+
+/* Normal pill */
+.prio-pill[data-p="normal"] .pdot { background: var(--c3); }
+.prio-pill[data-p="normal"].active {
+  background: var(--c5);
+  border-color: var(--c5);
+  color: #fff;
+}
+.prio-pill[data-p="normal"].active .pdot { background: rgba(255,255,255,.7); }
 
 /* ── Actions bar ── */
 .act-bar {
@@ -165,9 +232,47 @@ h1 {
   border-radius: 8px;
   transition: color .2s, background .2s;
 }
-
 .clear-btn:hover { color: var(--td); background: var(--c2); }
 .clear-btn:disabled { opacity: .35; cursor: default; pointer-events: none; }
+
+/* ── Priority group header ── */
+.prio-hdr {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 22px 0 12px;
+}
+.prio-hdr.first { margin-top: 0; }
+
+.prio-hdr-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.prio-hdr-dot.urgente     { background: var(--urg); }
+.prio-hdr-dot.prioritaria { background: var(--pri); }
+.prio-hdr-dot.normal      { background: var(--c4); }
+
+.prio-hdr-lbl {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.prio-hdr-lbl.urgente     { color: var(--urgd); }
+.prio-hdr-lbl.prioritaria { color: var(--prid); }
+.prio-hdr-lbl.normal      { color: var(--tm); }
+
+.prio-hdr-cnt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tm);
+  background: var(--c2);
+  border: 1px solid var(--c3);
+  padding: 1px 8px;
+  border-radius: 10px;
+}
 
 /* ── Task list ── */
 .task-list { display: flex; flex-direction: column; }
@@ -189,17 +294,27 @@ h1 {
   -webkit-user-select: none;
   user-select: none;
 }
-
 .task-item:hover {
   background: var(--c3);
   border-color: var(--c4);
   box-shadow: 0 4px 14px rgba(0,0,0,.11);
 }
+.task-item.done { opacity: .52; }
+.task-item.done:hover { opacity: .7; }
 
-.task-item.done { opacity: .55; }
-.task-item.done:hover { opacity: .72; }
+/* Priority left border */
+.task-item.urgente {
+  border-left-width: 4px;
+  border-left-color: var(--urg);
+  padding-left: 16px;
+}
+.task-item.prioritaria {
+  border-left-width: 4px;
+  border-left-color: var(--pri);
+  padding-left: 16px;
+}
 
-/* Add animation */
+/* Animations */
 .task-item.is-new { animation: slideIn .26s ease forwards; }
 
 @keyframes slideIn {
@@ -207,7 +322,6 @@ h1 {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Delete animation */
 .task-item.is-out {
   animation: slideOut .32s ease forwards;
   pointer-events: none;
@@ -231,17 +345,9 @@ h1 {
   justify-content: center;
   transition: background .2s, border-color .2s;
 }
+.task-item.done .chk { background: var(--c5); border-color: var(--c5); }
 
-.task-item.done .chk {
-  background: var(--c5);
-  border-color: var(--c5);
-}
-
-.chk-icon {
-  opacity: 0;
-  transition: opacity .2s;
-}
-
+.chk-icon { opacity: 0; transition: opacity .2s; }
 .task-item.done .chk-icon { opacity: 1; }
 
 /* ── Task text ── */
@@ -258,7 +364,6 @@ h1 {
   text-decoration-color: transparent;
   text-decoration-thickness: 2px;
 }
-
 .task-item.done .txt {
   color: var(--tm);
   text-decoration-color: var(--tm);
@@ -281,19 +386,16 @@ h1 {
   transition: color .2s, background .2s;
   line-height: 1;
 }
-
 .del:hover { color: #c0392b; background: rgba(192,57,43,.1); }
 
-/* ── Divider ── */
+/* ── Divider (completadas) ── */
 .divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 8px 0 16px;
+  margin: 6px 0 14px;
 }
-
 .div-line { flex: 1; height: 1px; background: var(--c3); }
-
 .div-lbl {
   font-size: 12px;
   font-weight: 700;
@@ -309,12 +411,10 @@ h1 {
   padding: 52px 20px 20px;
   animation: fadeUp .3s ease;
 }
-
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 .empty-ico { font-size: 62px; display: block; margin-bottom: 18px; }
 .empty-h   { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--td); }
 .empty-p   { font-size: 17px; color: var(--tm); line-height: 1.5; }
@@ -338,12 +438,9 @@ h1 {
   z-index: 100;
   transition: transform .42s cubic-bezier(.34,1.56,.64,1);
 }
-
 .inst-banner.show { transform: translateX(-50%) translateY(0); }
-
 .ib-txt { flex: 1; font-size: 15px; line-height: 1.4; }
 .ib-txt strong { display: block; font-size: 16px; margin-bottom: 2px; }
-
 .ib-ok {
   background: var(--c5);
   color: #fff;
@@ -358,9 +455,7 @@ h1 {
   flex-shrink: 0;
   transition: background .2s;
 }
-
 .ib-ok:hover { background: var(--c5d); }
-
 .ib-x {
   background: none;
   border: none;
@@ -372,10 +467,14 @@ h1 {
   padding: 0;
   transition: color .2s;
 }
-
 .ib-x:hover { color: rgba(255,255,255,.85); }
 
 /* ── Responsive ── */
+@media (max-width: 420px) {
+  .prio-pill .plbl { display: none; }
+  .prio-pill { gap: 0; }
+  .prio-pill .pdot { width: 10px; height: 10px; }
+}
 @media (max-width: 380px) {
   .add-btn .btn-lbl { display: none; }
   .add-btn { padding: 0 16px; }
@@ -413,6 +512,22 @@ h1 {
     </button>
   </form>
 
+  <!-- Priority selector -->
+  <div class="prio-bar" id="prio-bar">
+    <button class="prio-pill" data-p="urgente">
+      <span class="pdot"></span>
+      <span class="plbl">Urgente</span>
+    </button>
+    <button class="prio-pill" data-p="prioritaria">
+      <span class="pdot"></span>
+      <span class="plbl">Prioritaria</span>
+    </button>
+    <button class="prio-pill active" data-p="normal">
+      <span class="pdot"></span>
+      <span class="plbl">Normal</span>
+    </button>
+  </div>
+
   <div class="act-bar">
     <span class="sec-label" id="sec-label">Sin tareas</span>
     <button class="clear-btn" id="clear-btn" disabled>Limpiar completadas</button>
@@ -431,15 +546,29 @@ h1 {
 </div>
 
 <script>
-// ── Data ──────────────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 const KEY = 'mis-tareas-v1';
+
+const PRIORITIES = ['urgente', 'prioritaria', 'normal'];
+
+const PRIO_META = {
+  urgente:     { label: 'Urgente',     cls: 'urgente' },
+  prioritaria: { label: 'Prioritaria', cls: 'prioritaria' },
+  normal:      { label: 'Normal',      cls: 'normal' }
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
 let tasks = [];
 let deferredPrompt = null;
 let newId = null;
+let currentPrio = 'normal';
 
+// ── Data ──────────────────────────────────────────────────────────────────────
 function loadData() {
   try { tasks = JSON.parse(localStorage.getItem(KEY)) || []; }
   catch { tasks = []; }
+  // Migración: agregar prioridad a tareas existentes
+  tasks.forEach(t => { if (!t.priority) t.priority = 'normal'; });
 }
 
 function saveData() {
@@ -448,11 +577,7 @@ function saveData() {
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 function esc(s) {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function animateOut(el, cb) {
@@ -460,7 +585,7 @@ function animateOut(el, cb) {
   let called = false;
   const finish = () => { if (called) return; called = true; cb(); };
   el.addEventListener('animationend', finish, { once: true });
-  setTimeout(finish, 450); // fallback si animationend no dispara
+  setTimeout(finish, 450);
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -480,8 +605,7 @@ function render() {
   // Section label
   const total = tasks.length;
   document.getElementById('sec-label').textContent =
-    total === 0     ? 'Sin tareas' :
-    total === 1     ? '1 tarea'    : `${total} tareas`;
+    total === 0 ? 'Sin tareas' : total === 1 ? '1 tarea' : `${total} tareas`;
 
   // List
   const list = document.getElementById('task-list');
@@ -497,25 +621,54 @@ function render() {
     return;
   }
 
-  pending.forEach(t => list.appendChild(makeItem(t)));
+  // Grupos activos (solo los que tienen al menos 1 tarea)
+  const activeGroups = PRIORITIES.filter(pr => tasks.some(t => t.priority === pr));
+  const showHeaders = activeGroups.length > 1;
+  let isFirst = true;
 
-  if (pending.length > 0 && done.length > 0) {
-    const div = document.createElement('div');
-    div.className = 'divider';
-    div.innerHTML = `
-      <div class="div-line"></div>
-      <span class="div-lbl">Completadas</span>
-      <div class="div-line"></div>`;
-    list.appendChild(div);
-  }
+  activeGroups.forEach(prio => {
+    const prioTasks = tasks.filter(t => t.priority === prio);
+    const prPending = prioTasks.filter(t => !t.done);
+    const prDone    = prioTasks.filter(t =>  t.done);
 
-  done.forEach(t => list.appendChild(makeItem(t)));
+    if (showHeaders) {
+      list.appendChild(makePrioHeader(prio, prPending.length, isFirst));
+      isFirst = false;
+    }
+
+    prPending.forEach(t => list.appendChild(makeItem(t)));
+
+    if (prPending.length > 0 && prDone.length > 0) {
+      list.appendChild(makeDivider());
+    }
+
+    prDone.forEach(t => list.appendChild(makeItem(t)));
+  });
+}
+
+function makePrioHeader(prio, pendingCount, isFirst) {
+  const meta = PRIO_META[prio];
+  const el = document.createElement('div');
+  el.className = `prio-hdr${isFirst ? ' first' : ''}`;
+  el.innerHTML = `
+    <span class="prio-hdr-dot ${meta.cls}"></span>
+    <span class="prio-hdr-lbl ${meta.cls}">${meta.label}</span>
+    ${pendingCount > 0 ? `<span class="prio-hdr-cnt">${pendingCount} pendiente${pendingCount !== 1 ? 's' : ''}</span>` : ''}`;
+  return el;
+}
+
+function makeDivider() {
+  const el = document.createElement('div');
+  el.className = 'divider';
+  el.innerHTML = `<div class="div-line"></div><span class="div-lbl">Completadas</span><div class="div-line"></div>`;
+  return el;
 }
 
 function makeItem(task) {
   const el = document.createElement('div');
   el.className = [
     'task-item',
+    task.priority !== 'normal' ? task.priority : '',
     task.done      ? 'done'   : '',
     task.id === newId ? 'is-new' : ''
   ].filter(Boolean).join(' ');
@@ -544,8 +697,7 @@ function makeItem(task) {
     e.stopPropagation();
     animateOut(el, () => {
       tasks = tasks.filter(t => t.id !== task.id);
-      saveData();
-      render();
+      saveData(); render();
     });
   });
 
@@ -558,9 +710,8 @@ function addTask(text) {
   if (!text) return false;
   const id = Date.now();
   newId = id;
-  tasks.unshift({ id, text, done: false, created: id });
-  saveData();
-  render();
+  tasks.unshift({ id, text, done: false, priority: currentPrio, created: id });
+  saveData(); render();
   newId = null;
   return true;
 }
@@ -568,24 +719,27 @@ function addTask(text) {
 function clearCompleted() {
   const list = document.getElementById('task-list');
   const doneEls = Array.from(list.querySelectorAll('.task-item.done'));
-
-  if (!doneEls.length) {
-    tasks = tasks.filter(t => !t.done);
-    saveData(); render(); return;
-  }
+  if (!doneEls.length) { tasks = tasks.filter(t => !t.done); saveData(); render(); return; }
 
   let remaining = doneEls.length;
   doneEls.forEach(el => {
     animateOut(el, () => {
-      if (--remaining === 0) {
-        tasks = tasks.filter(t => !t.done);
-        saveData(); render();
-      }
+      if (--remaining === 0) { tasks = tasks.filter(t => !t.done); saveData(); render(); }
     });
   });
 }
 
-// ── Events ────────────────────────────────────────────────────────────────────
+// ── Priority selector ─────────────────────────────────────────────────────────
+document.querySelectorAll('.prio-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentPrio = btn.dataset.p;
+    document.querySelectorAll('.prio-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('task-input').focus();
+  });
+});
+
+// ── Form ──────────────────────────────────────────────────────────────────────
 document.getElementById('add-form').addEventListener('submit', e => {
   e.preventDefault();
   const inp = document.getElementById('task-input');
