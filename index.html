@@ -670,33 +670,33 @@ async function migrateLocal() {
   if (!db) return 0;
   if (localStorage.getItem(MIGRATED_KEY) === 'true') return 0;
 
+  // Si Supabase ya tiene tareas, otro dispositivo ya migró.
+  // La nube es la fuente de verdad — no re-subimos nada de localStorage
+  // (lo que falta acá probablemente fue borrado a propósito desde otro device).
+  if (tasks.length > 0) {
+    localStorage.setItem(MIGRATED_KEY, 'true');
+    return 0;
+  }
+
   const local = loadLocal();
   if (local.length === 0) {
     localStorage.setItem(MIGRATED_KEY, 'true');
     return 0;
   }
 
-  const existingIds = new Set(tasks.map(t => t.id));
-  const toMigrate = local
-    .filter(t => !existingIds.has(t.id))
-    .map(t => ({
-      id: t.id,
-      text: t.text,
-      done: !!t.done,
-      priority: t.priority || 'normal',
-      created_at: new Date(t.created || t.id || Date.now()).toISOString()
-    }));
-
-  if (toMigrate.length === 0) {
-    localStorage.setItem(MIGRATED_KEY, 'true');
-    return 0;
-  }
+  // Supabase está vacío + hay tareas locales → primera migración real
+  const toMigrate = local.map(t => ({
+    id: t.id,
+    text: t.text,
+    done: !!t.done,
+    priority: t.priority || 'normal',
+    created_at: new Date(t.created || t.id || Date.now()).toISOString()
+  }));
 
   const { error } = await db.from('tasks').insert(toMigrate);
   if (error) throw error;
 
-  // Mergear al estado local
-  tasks = [...toMigrate, ...tasks].sort((a, b) => {
+  tasks = toMigrate.slice().sort((a, b) => {
     const ta = new Date(a.created_at).getTime();
     const tb = new Date(b.created_at).getTime();
     return tb - ta;
