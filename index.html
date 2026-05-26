@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --c1: #fbe8c0;
@@ -87,6 +88,25 @@ h1 {
   transition: background .2s;
 }
 .badge.zero { background: var(--c4); }
+
+/* ── Sync indicator ── */
+.sync-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6cc070;
+  margin-left: 8px;
+  vertical-align: middle;
+  transition: background .3s;
+}
+.sync-dot.offline { background: #d94040; }
+.sync-dot.syncing { background: #e8b020; animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
 
 /* ── Add form ── */
 .add-form {
@@ -175,7 +195,6 @@ h1 {
   transition: background .18s;
 }
 
-/* Urgente pill */
 .prio-pill[data-p="urgente"] .pdot { background: var(--c3); }
 .prio-pill[data-p="urgente"]:hover .pdot { background: var(--urg); }
 .prio-pill[data-p="urgente"].active {
@@ -185,7 +204,6 @@ h1 {
 }
 .prio-pill[data-p="urgente"].active .pdot { background: var(--urg); }
 
-/* Prioritaria pill */
 .prio-pill[data-p="prioritaria"] .pdot { background: var(--c3); }
 .prio-pill[data-p="prioritaria"]:hover .pdot { background: var(--pri); }
 .prio-pill[data-p="prioritaria"].active {
@@ -195,7 +213,6 @@ h1 {
 }
 .prio-pill[data-p="prioritaria"].active .pdot { background: var(--pri); }
 
-/* Normal pill */
 .prio-pill[data-p="normal"] .pdot { background: var(--c3); }
 .prio-pill[data-p="normal"].active {
   background: var(--c5);
@@ -302,7 +319,6 @@ h1 {
 .task-item.done { opacity: .52; }
 .task-item.done:hover { opacity: .7; }
 
-/* Priority left border */
 .task-item.urgente {
   border-left-width: 4px;
   border-left-color: var(--urg);
@@ -314,7 +330,6 @@ h1 {
   padding-left: 16px;
 }
 
-/* Animations */
 .task-item.is-new { animation: slideIn .26s ease forwards; }
 
 @keyframes slideIn {
@@ -333,7 +348,6 @@ h1 {
   100% { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; transform: translateX(22px); }
 }
 
-/* ── Check circle ── */
 .chk {
   width: 26px;
   height: 26px;
@@ -350,7 +364,6 @@ h1 {
 .chk-icon { opacity: 0; transition: opacity .2s; }
 .task-item.done .chk-icon { opacity: 1; }
 
-/* ── Task text ── */
 .txt-wrap { flex: 1; min-width: 0; }
 
 .txt {
@@ -369,7 +382,6 @@ h1 {
   text-decoration-color: var(--tm);
 }
 
-/* ── Delete button ── */
 .del {
   width: 34px;
   height: 34px;
@@ -388,7 +400,6 @@ h1 {
 }
 .del:hover { color: #c0392b; background: rgba(192,57,43,.1); }
 
-/* ── Divider (completadas) ── */
 .divider {
   display: flex;
   align-items: center;
@@ -405,7 +416,7 @@ h1 {
   white-space: nowrap;
 }
 
-/* ── Empty state ── */
+/* ── Empty / loading state ── */
 .empty {
   text-align: center;
   padding: 52px 20px 20px;
@@ -418,6 +429,46 @@ h1 {
 .empty-ico { font-size: 62px; display: block; margin-bottom: 18px; }
 .empty-h   { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--td); }
 .empty-p   { font-size: 17px; color: var(--tm); line-height: 1.5; }
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--tm);
+  font-size: 15px;
+}
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--c3);
+  border-top-color: var(--c5);
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120px);
+  background: var(--td);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 6px 22px rgba(0,0,0,.22);
+  z-index: 200;
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+  max-width: calc(100% - 40px);
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { background: #c0392b; }
+.toast.success { background: #3a8a4e; }
 
 /* ── Install banner ── */
 .inst-banner {
@@ -469,7 +520,6 @@ h1 {
 }
 .ib-x:hover { color: rgba(255,255,255,.85); }
 
-/* ── Responsive ── */
 @media (max-width: 420px) {
   .prio-pill .plbl { display: none; }
   .prio-pill { gap: 0; }
@@ -488,7 +538,7 @@ h1 {
   <header>
     <div class="hdr-row">
       <div>
-        <h1>Mis Tareas</h1>
+        <h1>Mis Tareas <span class="sync-dot syncing" id="sync-dot" title="Sincronizando..."></span></h1>
         <p class="sub">Organizá tu día con claridad</p>
       </div>
       <span class="badge zero" id="badge">0 pendientes</span>
@@ -512,7 +562,6 @@ h1 {
     </button>
   </form>
 
-  <!-- Priority selector -->
   <div class="prio-bar" id="prio-bar">
     <button class="prio-pill" data-p="urgente">
       <span class="pdot"></span>
@@ -533,8 +582,15 @@ h1 {
     <button class="clear-btn" id="clear-btn" disabled>Limpiar completadas</button>
   </div>
 
-  <div class="task-list" id="task-list"></div>
+  <div class="task-list" id="task-list">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      Cargando tus tareas...
+    </div>
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <div class="inst-banner" id="inst-banner">
   <div class="ib-txt">
@@ -546,11 +602,13 @@ h1 {
 </div>
 
 <script>
-// ── Config ────────────────────────────────────────────────────────────────────
-const KEY = 'mis-tareas-v1';
+// ── Supabase config ───────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://zjuifhkahvbsncwnfhrv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqdWlmaGthaHZic25jd25maHJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDc0MjQsImV4cCI6MjA5NTMyMzQyNH0.ishprRCCEcrjsVRuOZ3-M17qW2s0LnRM29EuuWJApXM';
+const LOCAL_KEY = 'mis-tareas-v1';
+const MIGRATED_KEY = 'mis-tareas-migrated-v1';
 
 const PRIORITIES = ['urgente', 'prioritaria', 'normal'];
-
 const PRIO_META = {
   urgente:     { label: 'Urgente',     cls: 'urgente' },
   prioritaria: { label: 'Prioritaria', cls: 'prioritaria' },
@@ -558,26 +616,225 @@ const PRIO_META = {
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
+let db = null;
 let tasks = [];
 let deferredPrompt = null;
 let newId = null;
 let currentPrio = 'normal';
+let loaded = false;
 
-// ── Data ──────────────────────────────────────────────────────────────────────
-function loadData() {
-  try { tasks = JSON.parse(localStorage.getItem(KEY)) || []; }
-  catch { tasks = []; }
-  // Migración: agregar prioridad a tareas existentes
-  tasks.forEach(t => { if (!t.priority) t.priority = 'normal'; });
+// ── Sync indicator ────────────────────────────────────────────────────────────
+function setSync(state) {
+  const dot = document.getElementById('sync-dot');
+  dot.classList.remove('syncing', 'offline');
+  if (state === 'syncing') { dot.classList.add('syncing'); dot.title = 'Sincronizando...'; }
+  else if (state === 'offline') { dot.classList.add('offline'); dot.title = 'Sin conexión a la nube'; }
+  else { dot.title = 'Sincronizado'; }
 }
 
-function saveData() {
-  localStorage.setItem(KEY, JSON.stringify(tasks));
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Local backup ──────────────────────────────────────────────────────────────
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveLocal() {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(tasks));
+}
+
+// ── Supabase data ─────────────────────────────────────────────────────────────
+async function fetchTasks() {
+  if (!db) return null;
+  const { data, error } = await db
+    .from('tasks')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(t => ({
+    ...t,
+    priority: t.priority || 'normal'
+  }));
+}
+
+async function migrateLocal() {
+  if (!db) return 0;
+  if (localStorage.getItem(MIGRATED_KEY) === 'true') return 0;
+
+  const local = loadLocal();
+  if (local.length === 0) {
+    localStorage.setItem(MIGRATED_KEY, 'true');
+    return 0;
+  }
+
+  const existingIds = new Set(tasks.map(t => t.id));
+  const toMigrate = local
+    .filter(t => !existingIds.has(t.id))
+    .map(t => ({
+      id: t.id,
+      text: t.text,
+      done: !!t.done,
+      priority: t.priority || 'normal',
+      created_at: new Date(t.created || t.id || Date.now()).toISOString()
+    }));
+
+  if (toMigrate.length === 0) {
+    localStorage.setItem(MIGRATED_KEY, 'true');
+    return 0;
+  }
+
+  const { error } = await db.from('tasks').insert(toMigrate);
+  if (error) throw error;
+
+  // Mergear al estado local
+  tasks = [...toMigrate, ...tasks].sort((a, b) => {
+    const ta = new Date(a.created_at).getTime();
+    const tb = new Date(b.created_at).getTime();
+    return tb - ta;
+  });
+
+  localStorage.setItem(MIGRATED_KEY, 'true');
+  return toMigrate.length;
+}
+
+async function loadData() {
+  setSync('syncing');
+  try {
+    if (!db) throw new Error('Supabase no inicializado');
+
+    const fetched = await fetchTasks();
+    tasks = fetched;
+
+    // Migración: subir tareas viejas de localStorage si no se hizo antes
+    const migrated = await migrateLocal();
+    if (migrated > 0) {
+      toast(`${migrated} tarea${migrated !== 1 ? 's' : ''} migrada${migrated !== 1 ? 's' : ''} a la nube`, 'success');
+    }
+
+    saveLocal();
+    setSync('ok');
+  } catch (e) {
+    console.warn('Load failed, usando localStorage', e);
+    tasks = loadLocal();
+    tasks.forEach(t => { if (!t.priority) t.priority = 'normal'; });
+    setSync('offline');
+    toast('Sin conexión — usando datos locales', 'error');
+  }
+  loaded = true;
+}
+
+// ── Actions (con optimistic updates) ──────────────────────────────────────────
+async function addTask(text) {
+  text = text.trim();
+  if (!text) return false;
+
+  const id = Date.now();
+  newId = id;
+  const task = {
+    id,
+    text,
+    done: false,
+    priority: currentPrio,
+    created_at: new Date().toISOString()
+  };
+
+  // Optimistic
+  tasks.unshift(task);
+  saveLocal();
+  render();
+  newId = null;
+
+  if (!db) return true;
+  setSync('syncing');
+  try {
+    const { error } = await db.from('tasks').insert([task]);
+    if (error) throw error;
+    setSync('ok');
+  } catch (e) {
+    console.warn('Add failed', e);
+    setSync('offline');
+    toast('No se pudo guardar en la nube', 'error');
+  }
+  return true;
+}
+
+async function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveLocal();
+  render();
+
+  if (!db) return;
+  setSync('syncing');
+  try {
+    const { error } = await db.from('tasks').update({ done: t.done }).eq('id', id);
+    if (error) throw error;
+    setSync('ok');
+  } catch (e) {
+    console.warn('Toggle failed', e);
+    setSync('offline');
+  }
+}
+
+async function deleteTaskRemote(id) {
+  if (!db) return;
+  setSync('syncing');
+  try {
+    const { error } = await db.from('tasks').delete().eq('id', id);
+    if (error) throw error;
+    setSync('ok');
+  } catch (e) {
+    console.warn('Delete failed', e);
+    setSync('offline');
+  }
+}
+
+async function clearCompleted() {
+  const list = document.getElementById('task-list');
+  const doneEls = Array.from(list.querySelectorAll('.task-item.done'));
+  const doneIds = tasks.filter(t => t.done).map(t => t.id);
+
+  if (!doneEls.length) {
+    tasks = tasks.filter(t => !t.done);
+    saveLocal(); render();
+    return;
+  }
+
+  let remaining = doneEls.length;
+  doneEls.forEach(el => {
+    animateOut(el, () => {
+      if (--remaining === 0) {
+        tasks = tasks.filter(t => !t.done);
+        saveLocal(); render();
+      }
+    });
+  });
+
+  if (!db || doneIds.length === 0) return;
+  setSync('syncing');
+  try {
+    const { error } = await db.from('tasks').delete().in('id', doneIds);
+    if (error) throw error;
+    setSync('ok');
+  } catch (e) {
+    console.warn('Clear failed', e);
+    setSync('offline');
+  }
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function animateOut(el, cb) {
@@ -593,23 +850,24 @@ function render() {
   const pending = tasks.filter(t => !t.done);
   const done    = tasks.filter(t =>  t.done);
 
-  // Badge
   const p = pending.length;
   const badge = document.getElementById('badge');
   badge.textContent = p === 1 ? '1 pendiente' : `${p} pendientes`;
   badge.classList.toggle('zero', p === 0);
 
-  // Clear button
   document.getElementById('clear-btn').disabled = done.length === 0;
 
-  // Section label
   const total = tasks.length;
   document.getElementById('sec-label').textContent =
     total === 0 ? 'Sin tareas' : total === 1 ? '1 tarea' : `${total} tareas`;
 
-  // List
   const list = document.getElementById('task-list');
   list.innerHTML = '';
+
+  if (!loaded) {
+    list.innerHTML = `<div class="loading"><div class="spinner"></div>Cargando tus tareas...</div>`;
+    return;
+  }
 
   if (tasks.length === 0) {
     list.innerHTML = `
@@ -621,7 +879,6 @@ function render() {
     return;
   }
 
-  // Grupos activos (solo los que tienen al menos 1 tarea)
   const activeGroups = PRIORITIES.filter(pr => tasks.some(t => t.priority === pr));
   const showHeaders = activeGroups.length > 1;
   let isFirst = true;
@@ -669,7 +926,7 @@ function makeItem(task) {
   el.className = [
     'task-item',
     task.priority !== 'normal' ? task.priority : '',
-    task.done      ? 'done'   : '',
+    task.done ? 'done' : '',
     task.id === newId ? 'is-new' : ''
   ].filter(Boolean).join(' ');
   el.dataset.id = task.id;
@@ -689,44 +946,19 @@ function makeItem(task) {
 
   el.addEventListener('click', e => {
     if (e.target.closest('.del')) return;
-    const t = tasks.find(t => t.id === task.id);
-    if (t) { t.done = !t.done; saveData(); render(); }
+    toggleTask(task.id);
   });
 
   el.querySelector('.del').addEventListener('click', e => {
     e.stopPropagation();
     animateOut(el, () => {
       tasks = tasks.filter(t => t.id !== task.id);
-      saveData(); render();
+      saveLocal(); render();
+      deleteTaskRemote(task.id);
     });
   });
 
   return el;
-}
-
-// ── Actions ───────────────────────────────────────────────────────────────────
-function addTask(text) {
-  text = text.trim();
-  if (!text) return false;
-  const id = Date.now();
-  newId = id;
-  tasks.unshift({ id, text, done: false, priority: currentPrio, created: id });
-  saveData(); render();
-  newId = null;
-  return true;
-}
-
-function clearCompleted() {
-  const list = document.getElementById('task-list');
-  const doneEls = Array.from(list.querySelectorAll('.task-item.done'));
-  if (!doneEls.length) { tasks = tasks.filter(t => !t.done); saveData(); render(); return; }
-
-  let remaining = doneEls.length;
-  doneEls.forEach(el => {
-    animateOut(el, () => {
-      if (--remaining === 0) { tasks = tasks.filter(t => !t.done); saveData(); render(); }
-    });
-  });
 }
 
 // ── Priority selector ─────────────────────────────────────────────────────────
@@ -743,7 +975,11 @@ document.querySelectorAll('.prio-pill').forEach(btn => {
 document.getElementById('add-form').addEventListener('submit', e => {
   e.preventDefault();
   const inp = document.getElementById('task-input');
-  if (addTask(inp.value)) { inp.value = ''; inp.focus(); }
+  const txt = inp.value;
+  if (!txt.trim()) return;
+  inp.value = '';
+  addTask(txt);
+  inp.focus();
 });
 
 document.getElementById('clear-btn').addEventListener('click', clearCompleted);
@@ -773,9 +1009,42 @@ document.getElementById('ib-x').addEventListener('click', () => {
   document.getElementById('inst-banner').classList.remove('show');
 });
 
+// ── Online/offline detection ──────────────────────────────────────────────────
+window.addEventListener('online', async () => {
+  toast('Conexión recuperada', 'success');
+  await loadData();
+  render();
+});
+window.addEventListener('offline', () => {
+  setSync('offline');
+  toast('Sin conexión', 'error');
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────────
-loadData();
-render();
+async function init() {
+  // Inicializar Supabase
+  if (window.supabase) {
+    try {
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (e) {
+      console.warn('Supabase init failed', e);
+    }
+  }
+
+  // Mostrar datos locales rápido mientras carga
+  tasks = loadLocal();
+  tasks.forEach(t => { if (!t.priority) t.priority = 'normal'; });
+  if (tasks.length > 0) {
+    loaded = true;
+    render();
+  }
+
+  // Cargar desde Supabase (sobrescribe el estado local)
+  await loadData();
+  render();
+}
+
+init();
 </script>
 </body>
 </html>
