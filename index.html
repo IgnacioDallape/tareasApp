@@ -607,6 +607,7 @@ const SUPABASE_URL = 'https://zjuifhkahvbsncwnfhrv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqdWlmaGthaHZic25jd25maHJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDc0MjQsImV4cCI6MjA5NTMyMzQyNH0.ishprRCCEcrjsVRuOZ3-M17qW2s0LnRM29EuuWJApXM';
 const LOCAL_KEY = 'mis-tareas-v1';
 const MIGRATED_KEY = 'mis-tareas-migrated-v1';
+const PENDING_DEL_KEY = 'mis-tareas-pending-del-v1';
 
 const PRIORITIES = ['urgente', 'prioritaria', 'normal'];
 const PRIO_META = {
@@ -650,6 +651,47 @@ function loadLocal() {
 
 function saveLocal() {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(tasks));
+}
+
+// ── Cola de borrados pendientes ───────────────────────────────────────────────
+// Si un DELETE no llega a Supabase (red mala, app cerrada antes del request),
+// el ID queda guardado acá y se reintenta en la próxima carga. Mientras tanto,
+// las tareas se filtran client-side para que no reaparezcan visualmente.
+function pendingDels() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PENDING_DEL_KEY));
+    return Array.isArray(v) ? v.filter(x => typeof x === 'number') : [];
+  } catch { return []; }
+}
+
+function setPendingDels(arr) {
+  localStorage.setItem(PENDING_DEL_KEY, JSON.stringify(arr));
+}
+
+function queueDel(ids) {
+  const list = Array.isArray(ids) ? ids : [ids];
+  if (list.length === 0) return;
+  const set = new Set([...pendingDels(), ...list]);
+  setPendingDels([...set]);
+}
+
+function dequeueDel(ids) {
+  const list = Array.isArray(ids) ? ids : [ids];
+  const set = new Set(list);
+  setPendingDels(pendingDels().filter(id => !set.has(id)));
+}
+
+async function flushPendingDels() {
+  if (!db) return;
+  const ids = pendingDels();
+  if (ids.length === 0) return;
+  try {
+    const { error } = await db.from('tasks').delete().in('id', ids);
+    if (error) throw error;
+    setPendingDels([]);
+  } catch (e) {
+    console.warn('Flush pending deletes failed', e);
+  }
 }
 
 // ── Supabase data ─────────────────────────────────────────────────────────────
@@ -711,8 +753,15 @@ async function loadData() {
   try {
     if (!db) throw new Error('Supabase no inicializado');
 
+    // Antes de fetchar, intentar limpiar borrados que quedaron pendientes
+    await flushPendingDels();
+
     const fetched = await fetchTasks();
-    tasks = fetched;
+
+    // Filtrar tareas que están en cola de borrado (por si el flush falló).
+    // Esto evita que tareas borradas reaparezcan visualmente al reabrir la app.
+    const pending = new Set(pendingDels());
+    tasks = fetched.filter(t => !pending.has(t.id));
 
     // Migración: subir tareas viejas de localStorage si no se hizo antes
     const migrated = await migrateLocal();
@@ -726,6 +775,9 @@ async function loadData() {
     console.warn('Load failed, usando localStorage', e);
     tasks = loadLocal();
     tasks.forEach(t => { if (!t.priority) t.priority = 'normal'; });
+    // También filtrar pending deletes en modo offline
+    const pending = new Set(pendingDels());
+    tasks = tasks.filter(t => !pending.has(t.id));
     setSync('offline');
     toast('Sin conexión — usando datos locales', 'error');
   }
@@ -787,11 +839,12 @@ async function toggleTask(id) {
 }
 
 async function deleteTaskRemote(id) {
-  if (!db) return;
+  if (!db) { dequeueDel(id); return; }
   setSync('syncing');
   try {
     const { error } = await db.from('tasks').delete().eq('id', id);
     if (error) throw error;
+    dequeueDel(id);
     setSync('ok');
   } catch (e) {
     console.warn('Delete failed', e);
@@ -804,27 +857,32 @@ async function clearCompleted() {
   const doneEls = Array.from(list.querySelectorAll('.task-item.done'));
   const doneIds = tasks.filter(t => t.done).map(t => t.id);
 
+  // Marcar como pending delete ANTES de cualquier cosa.
+  // Si el request a Supabase falla o la app se cierra, el filtro de pending
+  // deletes evita que reaparezcan al reabrir.
+  if (doneIds.length > 0) queueDel(doneIds);
+
   if (!doneEls.length) {
     tasks = tasks.filter(t => !t.done);
     saveLocal(); render();
-    return;
-  }
-
-  let remaining = doneEls.length;
-  doneEls.forEach(el => {
-    animateOut(el, () => {
-      if (--remaining === 0) {
-        tasks = tasks.filter(t => !t.done);
-        saveLocal(); render();
-      }
+  } else {
+    let remaining = doneEls.length;
+    doneEls.forEach(el => {
+      animateOut(el, () => {
+        if (--remaining === 0) {
+          tasks = tasks.filter(t => !t.done);
+          saveLocal(); render();
+        }
+      });
     });
-  });
+  }
 
   if (!db || doneIds.length === 0) return;
   setSync('syncing');
   try {
     const { error } = await db.from('tasks').delete().in('id', doneIds);
     if (error) throw error;
+    dequeueDel(doneIds);
     setSync('ok');
   } catch (e) {
     console.warn('Clear failed', e);
@@ -951,10 +1009,12 @@ function makeItem(task) {
 
   el.querySelector('.del').addEventListener('click', e => {
     e.stopPropagation();
+    const tid = task.id;
+    queueDel(tid); // marcar como pending delete antes del request
     animateOut(el, () => {
-      tasks = tasks.filter(t => t.id !== task.id);
+      tasks = tasks.filter(t => t.id !== tid);
       saveLocal(); render();
-      deleteTaskRemote(task.id);
+      deleteTaskRemote(tid);
     });
   });
 
